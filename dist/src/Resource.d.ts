@@ -33,6 +33,14 @@ export declare class BaseResource implements IResource {
      */
     fields(): never[];
     /**
+     *
+     * Get all actions for this resource
+     *
+     * @return {Array}
+     *
+     */
+    actions(): never[];
+    /**
      * Get the schema for this class
      *
      * @return {string}
@@ -116,6 +124,7 @@ export declare class BaseResource implements IResource {
         slug: string;
         title: string;
         fields: never[];
+        actions: never[];
         perPage: number;
         primaryKey: string;
         collection: string;

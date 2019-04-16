@@ -80,6 +80,16 @@ var BaseResource = /** @class */ (function () {
         return [];
     };
     /**
+     *
+     * Get all actions for this resource
+     *
+     * @return {Array}
+     *
+     */
+    BaseResource.prototype.actions = function () {
+        return [];
+    };
+    /**
      * Get the schema for this class
      *
      * @return {string}
@@ -191,6 +201,7 @@ var BaseResource = /** @class */ (function () {
             slug: this.slug(),
             title: this.title(),
             fields: this.fields(),
+            actions: this.actions(),
             perPage: this.perPage(),
             primaryKey: this.primaryKey(),
             collection: this.collection(),

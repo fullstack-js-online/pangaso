@@ -3,6 +3,7 @@ export { Server } from './src/server';
 export { Text } from './src/fields/Text';
 export { Date } from './src/fields/Date';
 export { Num } from './src/fields/Number';
+export { Action } from './src/actions/Action';
 export { HasMany } from './src/fields/HasMany';
 export { PangasoMiddleware } from './src/index';
 export { Textarea } from './src/fields/Textarea';

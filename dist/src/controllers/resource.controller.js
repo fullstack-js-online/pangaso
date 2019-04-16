@@ -165,6 +165,58 @@ var ResourceController = /** @class */ (function () {
     };
     /**
      *
+     * Run a resource action on a selected list of resources.
+     *
+     * @param {Express.Request} req
+     *
+     * @param {Express.Response} res
+     *
+     * @return {Express.Response}
+     *
+     */
+    ResourceController.prototype.action = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _a, actionId, resources, action, collection;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _a = req.body, actionId = _a.action, resources = _a.resources;
+                        action = req.pangaso.resource.actions().find(function (a) { return a.id === actionId; });
+                        return [4 /*yield*/, req.pangaso.database.fetchByIds(req.params.slug, resources)
+                            /**
+                             *
+                             * Run the handle method on the action, passing in
+                             * the database connection, request object
+                             * and collection of models
+                             *
+                             */
+                        ];
+                    case 1:
+                        collection = _b.sent();
+                        /**
+                         *
+                         * Run the handle method on the action, passing in
+                         * the database connection, request object
+                         * and collection of models
+                         *
+                         */
+                        return [4 /*yield*/, action.handle(req.pangaso.database.get().collection(req.params.slug), req, collection)];
+                    case 2:
+                        /**
+                         *
+                         * Run the handle method on the action, passing in
+                         * the database connection, request object
+                         * and collection of models
+                         *
+                         */
+                        _b.sent();
+                        return [2 /*return*/, res.json({})];
+                }
+            });
+        });
+    };
+    /**
+     *
      * Delete a resource from specific resource collection
      *
      * @param {Express.Request} req

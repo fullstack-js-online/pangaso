@@ -69,9 +69,29 @@ export class Pangaso {
         if (this.initialized) return
 
         this.initialized = true
-        try {
-            const files = Fs.readdirSync(this.resourcesPath)
 
+        try {
+            /**
+             *
+             * Fetch all files (and unfortunately, folders) in resource path
+             *
+             */
+            let files = Fs.readdirSync(this.resourcesPath)
+
+            /**
+             *
+             * Get only files ending in .js
+             *
+             */
+            files = files.filter(
+                file => file.substring(file.length - 3) === '.js'
+            )
+
+            /**
+             *
+             * Foreach of those files, require and load the resource
+             *
+             */
             files.forEach((file: string) => {
                 const resource = require(`${this.resourcesPath}/${file}`)
 

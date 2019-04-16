@@ -129,6 +129,23 @@ var Database = /** @class */ (function () {
         });
     };
     /**
+     * Fetch all matching records by a bunch of ids
+     *
+     * @param {string} collection
+     *
+     */
+    Database.prototype.fetchByIds = function (collection, resources) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                // @ts-ignore
+                return [2 /*return*/, this.get()
+                        .collection(collection)
+                        .find({ _id: { $in: resources.map(function (resource) { return new mongodb_1.ObjectID(resource); }) } })
+                        .toArray()];
+            });
+        });
+    };
+    /**
      *
      * Delete a specific resource
      *
@@ -145,7 +162,9 @@ var Database = /** @class */ (function () {
                 // @ts-ignore
                 return [2 /*return*/, this.get()
                         .collection(collection)
-                        .deleteMany({ _id: { $in: primaryKeys.map(function (key) { return new mongodb_1.ObjectID(key); }) } })];
+                        .deleteMany({
+                        _id: { $in: primaryKeys.map(function (key) { return new mongodb_1.ObjectID(key); }) }
+                    })];
             });
         });
     };

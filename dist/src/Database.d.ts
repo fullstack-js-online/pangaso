@@ -46,6 +46,13 @@ export declare class Database {
      */
     fetch(collection: string, params?: any, filter?: any): Promise<any>;
     /**
+     * Fetch all matching records by a bunch of ids
+     *
+     * @param {string} collection
+     *
+     */
+    fetchByIds(collection: string, resources: Array<string>): Promise<any[]>;
+    /**
      *
      * Delete a specific resource
      *

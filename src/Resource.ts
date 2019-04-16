@@ -48,6 +48,17 @@ export class BaseResource implements IResource {
     }
 
     /**
+     *
+     * Get all actions for this resource
+     *
+     * @return {Array}
+     *
+     */
+    public actions() {
+        return []
+    }
+
+    /**
      * Get the schema for this class
      *
      * @return {string}
@@ -161,6 +172,7 @@ export class BaseResource implements IResource {
             slug: this.slug(),
             title: this.title(),
             fields: this.fields(),
+            actions: this.actions(),
             perPage: this.perPage(),
             primaryKey: this.primaryKey(),
             collection: this.collection(),

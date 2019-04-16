@@ -27,10 +27,10 @@
                         Cancel
                     </button>
                     <button
-                        @click="handleDelete()"
-                        class="trans-30 text-white bg-red-light focus:outline-none px-8 h-9 rounded-lg hover:bg-red-dark"
+                        @click="handleConfirm()"
+                        :class="`${action === 'DeleteResources' || (action === 'RunAction' && data.isDestructive) ? DANGER_BUTTON : PRIMARY_BUTTON}`"
                     >
-                        Delete
+                        {{ action === 'DeleteResources' ? 'Delete' : 'Run Action' }}
                     </button>
                 </footer>
             </div>
@@ -49,32 +49,62 @@ export default {
     }),
 
     mounted() {
-        Bus.$on('DeleteResources', items => {
-            this.open = true
+        ['DeleteResources', 'RunAction'].forEach(event => {
+            Bus.$on(event, items => {
+                /**
+                 * 
+                 * Display the confirm modal
+                 * 
+                 */
+                this.open = true
 
-            this.data = items
+                /**
+                 * 
+                 * Set the payload for this 
+                 */
+                this.data = items
 
-            this.action = 'DeleteResources'
+                /**
+                 * 
+                 * Set the current action name
+                 * 
+                 */
+                this.action = event
 
-            switch (this.action) {
-                case 'DeleteResources':
-                    this.message = items.length > 1 ? 'Delete resources ? ' : 'Delete resource ?'
+                switch (this.action) {
+                    case 'DeleteResources':
+                        this.message =
+                            items.length > 1
+                                ? 'Delete resources ? '
+                                : 'Delete resource ?'
 
-                    console.log('-->', items.length)
+                        this.messageBody =
+                            items.length === 1
+                                ? 'Are you sure you want to delete this resource ?'
+                                : `Are you sure you want to delete ${
+                                    items.length
+                                } resources ?`
+                        break
+                     case 'RunAction':
+                        this.message = this.data.name
 
-                    this.messageBody = items.length === 1 ? 'Are you sure you want to delete this resource ?' : `Are you sure you want to delete ${items.length} resources ?`
-                    break;
-                default:
-                    break;
-            }
+                        this.messageBody = items.count === 1 ? 'Are you sure you want to run this action ?' : `Are you sure you want to run this action on ${items.count} resources ?`
+
+                        break
+                    default:
+                        break
+                }
+            })
         })
     },
 
     methods: {
-        handleDelete() {
+        handleConfirm() {
             this.open = false
 
             Bus.$emit(`${this.action}Confirmed`, this.data)
+
+            this.cancel()
         },
         cancel() {
             this.data = {}

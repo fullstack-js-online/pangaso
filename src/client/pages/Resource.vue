@@ -34,29 +34,42 @@
         </div>
 
         <div class="w-full bg-white rounded-t-lg shadow mt-4">
-            <div class="h-12 flex justify-between items-center px-6">
+            <div class="h-16 flex justify-between items-center px-6">
                 <input
                     v-model="allSelected"
                     @click="markAllAsSelected"
                     type="checkbox"
                 />
 
-                <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    role="presentation"
-                    v-if="selected.length > 0"
-                    aria-labelledby="delete"
-                    @click="deleteConfirm(selected)"
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="fill-current text-grey ml-3 cursor-pointer hover:text-indigo-dark"
-                >
-                    <path
-                        fill-rule="nonzero"
-                        d="M6 4V2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2h5a1 1 0 0 1 0 2h-1v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6H1a1 1 0 1 1 0-2h5zM4 6v12h12V6H4zm8-2V2H8v2h4zM8 8a1 1 0 0 1 1 1v6a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1zm4 0a1 1 0 0 1 1 1v6a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1z"
-                    ></path>
-                </svg>
+                <div class="flex items-center justify-end w-1/3">
+                    <select v-if="resource.actions.length > 0 && selected.length > 0" :class="`${FORM_CONTROL} w-2/4`" v-model="selectedAction">
+                        <option value='' selected disabled>Select an action</option>
+                        <option v-for="action in resource.actions" :value="action.id" :key="action.id">
+                            {{ action.name }}
+                        </option>
+                    </select>
+
+                    <button type="button" @click="runActionConfirm" v-if="resource.actions.length > 0 && selected.length > 0" :class="classnames('ml-3 focus:outline-none cursor-pointer trans-30 h-10 flex items-center justify-center rounded-lg px-3', { 'bg-indigo hover:bg-indigo-dark': selectedAction, 'bg-indigo-lighter cursor-not-allowed': !selectedAction })">
+                        <svg width="20" height="20" class="fill-current text-white font-bold h-10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 41.999 41.999" style="enable-background:new 0 0 41.999 41.999;" xml:space="preserve" ><g><path d="M36.068,20.176l-29-20C6.761-0.035,6.363-0.057,6.035,0.114C5.706,0.287,5.5,0.627,5.5,0.999v40  c0,0.372,0.206,0.713,0.535,0.886c0.146,0.076,0.306,0.114,0.465,0.114c0.199,0,0.397-0.06,0.568-0.177l29-20  c0.271-0.187,0.432-0.494,0.432-0.823S36.338,20.363,36.068,20.176z M7.5,39.095V2.904l26.239,18.096L7.5,39.095z" class="active-path" /></g> </svg>
+                    </button>
+
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        role="presentation"
+                        aria-labelledby="delete"
+                        v-if="selected.length > 0"
+                        @click="deleteConfirm(selected)"
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="fill-current text-grey ml-8 cursor-pointer hover:text-indigo-dark"
+                    >
+                        <path
+                            fill-rule="nonzero"
+                            d="M6 4V2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2h5a1 1 0 0 1 0 2h-1v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6H1a1 1 0 1 1 0-2h5zM4 6v12h12V6H4zm8-2V2H8v2h4zM8 8a1 1 0 0 1 1 1v6a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1zm4 0a1 1 0 0 1 1 1v6a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1z"
+                        ></path>
+                    </svg>
+                </div>
             </div>
 
             <div
@@ -187,7 +200,7 @@
 </template>
 
 <script>
-import { FETCH_RESOURCE, DELETE_RESOURCES } from '@store/modules/resources'
+import { FETCH_RESOURCE, POST_RUN_ACTION, DELETE_RESOURCES } from '@store/modules/resources'
 
 export default {
     /**
@@ -245,6 +258,7 @@ export default {
         selectAll: false,
         selected: [],
         allSelected: false,
+        selectedAction: '',
         page: 1,
         data: [],
         total: 0
@@ -279,6 +293,15 @@ export default {
          */
         Bus.$on('DeleteResourcesConfirmed', items => {
             this.delete(items)
+        })
+
+        /**
+         * 
+         * Listen to when the run action event is confirmed
+         * 
+         */
+        Bus.$on('RunActionConfirmed', action => {
+            this.runAction(action)
         })
     },
 
@@ -351,6 +374,8 @@ export default {
                     slug: this.resource.slug
                 })
                 .then(() => {
+                    this.selected = []
+
                     this.allSelected = false
                     
                     this.fetchData()
@@ -375,6 +400,60 @@ export default {
 
             this.$router.push(`${this.$route.path}?page=${page}`)
         },
+
+        /**
+         * 
+         * Trigger confirmation modal for action
+         * 
+         * @return {void}
+         * 
+         */
+        runActionConfirm() {
+            const action = this.resource.actions.find(action => action.id === this.selectedAction)
+            
+            Bus.$emit('RunAction', { ...action, count: this.selected.length })
+        },
+
+        /**
+         * Run an action on selected resource records
+         * 
+         * @return {void}
+         * 
+         */
+        runAction(action) {
+            this.$store.dispatch(POST_RUN_ACTION, {
+                resources: this.selected,
+                action: this.selectedAction,
+                slug: this.$route.params.slug
+            }).then(() => {
+                /**
+                 * 
+                 * Reset the selected action to default
+                 * 
+                 */
+                this.selectedAction = ''
+
+                /**
+                 * 
+                 * Mark all selected as not selected
+                 */
+                this.selected = []
+
+                /**
+                 * 
+                 * Set all selected to false
+                 * 
+                 */
+                this.allSelected = false
+
+                /**
+                 * 
+                 * Fetch a new set of data
+                 * 
+                 */
+                this.fetchData()
+            })
+        }
     },
 
     /**

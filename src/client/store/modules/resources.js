@@ -3,6 +3,7 @@ import client from '@client/utils/axios'
 export const GET_RESOURCE = 'GET_RESOURCE'
 export const GET_RESOURCES = 'GET_RESOURCES'
 export const FETCH_RESOURCE = 'FETCH_RESOURCE'
+export const POST_RUN_ACTION = 'POST_RUN_ACTION'
 export const DELETE_RESOURCES = 'DELETE_RESOURCES'
 
 export default {
@@ -54,7 +55,17 @@ export default {
          *
          */
         [GET_RESOURCE]: (ctx, { slug, primaryKey }) =>
-            client.get(`resources/${slug}/${primaryKey}`)
+            client.get(`resources/${slug}/${primaryKey}`),
+
+        /**
+         *
+         * Post run action
+         *
+         * @return {Promise}
+         *
+         */
+        [POST_RUN_ACTION]: (ctx, { slug, resources, action }) =>
+            client.post(`resources/${slug}/run-action`, { resources, action })
     },
 
     mutations: {

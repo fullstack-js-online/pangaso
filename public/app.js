@@ -2345,7 +2345,23 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _store_modules_resources__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../store/modules/resources */ "./src/client/store/modules/resources.js");
+/* harmony import */ var _babel_runtime_helpers_objectSpread__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/objectSpread */ "./node_modules/@babel/runtime/helpers/objectSpread.js");
+/* harmony import */ var _babel_runtime_helpers_objectSpread__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_objectSpread__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _store_modules_resources__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../store/modules/resources */ "./src/client/store/modules/resources.js");
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -2589,6 +2605,7 @@ __webpack_require__.r(__webpack_exports__);
       selectAll: false,
       selected: [],
       allSelected: false,
+      selectedAction: '',
       page: 1,
       data: [],
       total: 0
@@ -2627,6 +2644,15 @@ __webpack_require__.r(__webpack_exports__);
     Bus.$on('DeleteResourcesConfirmed', function (items) {
       _this["delete"](items);
     });
+    /**
+     * 
+     * Listen to when the run action event is confirmed
+     * 
+     */
+
+    Bus.$on('RunActionConfirmed', function (action) {
+      _this.runAction(action);
+    });
   },
 
   /**
@@ -2663,7 +2689,7 @@ __webpack_require__.r(__webpack_exports__);
     fetchData: function fetchData() {
       var _this3 = this;
 
-      this.$store.dispatch(_store_modules_resources__WEBPACK_IMPORTED_MODULE_0__["FETCH_RESOURCE"], {
+      this.$store.dispatch(_store_modules_resources__WEBPACK_IMPORTED_MODULE_1__["FETCH_RESOURCE"], {
         slug: this.$route.params.slug,
         page: this.page
       }).then(function (_ref) {
@@ -2696,10 +2722,11 @@ __webpack_require__.r(__webpack_exports__);
     "delete": function _delete(primaryKeys) {
       var _this4 = this;
 
-      this.$store.dispatch(_store_modules_resources__WEBPACK_IMPORTED_MODULE_0__["DELETE_RESOURCES"], {
+      this.$store.dispatch(_store_modules_resources__WEBPACK_IMPORTED_MODULE_1__["DELETE_RESOURCES"], {
         resources: primaryKeys,
         slug: this.resource.slug
       }).then(function () {
+        _this4.selected = [];
         _this4.allSelected = false;
 
         _this4.fetchData();
@@ -2719,6 +2746,67 @@ __webpack_require__.r(__webpack_exports__);
       this.allSelected = false;
       this.fetchData();
       this.$router.push("".concat(this.$route.path, "?page=").concat(page));
+    },
+
+    /**
+     * 
+     * Trigger confirmation modal for action
+     * 
+     * @return {void}
+     * 
+     */
+    runActionConfirm: function runActionConfirm() {
+      var _this5 = this;
+
+      var action = this.resource.actions.find(function (action) {
+        return action.id === _this5.selectedAction;
+      });
+      Bus.$emit('RunAction', _babel_runtime_helpers_objectSpread__WEBPACK_IMPORTED_MODULE_0___default()({}, action, {
+        count: this.selected.length
+      }));
+    },
+
+    /**
+     * Run an action on selected resource records
+     * 
+     * @return {void}
+     * 
+     */
+    runAction: function runAction(action) {
+      var _this6 = this;
+
+      this.$store.dispatch(_store_modules_resources__WEBPACK_IMPORTED_MODULE_1__["POST_RUN_ACTION"], {
+        resources: this.selected,
+        action: this.selectedAction,
+        slug: this.$route.params.slug
+      }).then(function () {
+        /**
+         * 
+         * Reset the selected action to default
+         * 
+         */
+        _this6.selectedAction = '';
+        /**
+         * 
+         * Mark all selected as not selected
+         */
+
+        _this6.selected = [];
+        /**
+         * 
+         * Set all selected to false
+         * 
+         */
+
+        _this6.allSelected = false;
+        /**
+         * 
+         * Fetch a new set of data
+         * 
+         */
+
+        _this6.fetchData();
+      });
     }
   },
 
@@ -2805,27 +2893,50 @@ __webpack_require__.r(__webpack_exports__);
   mounted: function mounted() {
     var _this = this;
 
-    Bus.$on('DeleteResources', function (items) {
-      _this.open = true;
-      _this.data = items;
-      _this.action = 'DeleteResources';
+    ['DeleteResources', 'RunAction'].forEach(function (event) {
+      Bus.$on(event, function (items) {
+        /**
+         * 
+         * Display the confirm modal
+         * 
+         */
+        _this.open = true;
+        /**
+         * 
+         * Set the payload for this 
+         */
 
-      switch (_this.action) {
-        case 'DeleteResources':
-          _this.message = items.length > 1 ? 'Delete resources ? ' : 'Delete resource ?';
-          console.log('-->', items.length);
-          _this.messageBody = items.length === 1 ? 'Are you sure you want to delete this resource ?' : "Are you sure you want to delete ".concat(items.length, " resources ?");
-          break;
+        _this.data = items;
+        /**
+         * 
+         * Set the current action name
+         * 
+         */
 
-        default:
-          break;
-      }
+        _this.action = event;
+
+        switch (_this.action) {
+          case 'DeleteResources':
+            _this.message = items.length > 1 ? 'Delete resources ? ' : 'Delete resource ?';
+            _this.messageBody = items.length === 1 ? 'Are you sure you want to delete this resource ?' : "Are you sure you want to delete ".concat(items.length, " resources ?");
+            break;
+
+          case 'RunAction':
+            _this.message = _this.data.name;
+            _this.messageBody = items.count === 1 ? 'Are you sure you want to run this action ?' : "Are you sure you want to run this action on ".concat(items.count, " resources ?");
+            break;
+
+          default:
+            break;
+        }
+      });
     });
   },
   methods: {
-    handleDelete: function handleDelete() {
+    handleConfirm: function handleConfirm() {
       this.open = false;
       Bus.$emit("".concat(this.action, "Confirmed"), this.data);
+      this.cancel();
     },
     cancel: function cancel() {
       this.data = {};
@@ -7403,7 +7514,7 @@ var render = function() {
       [
         _c(
           "div",
-          { staticClass: "h-12 flex justify-between items-center px-6" },
+          { staticClass: "h-16 flex justify-between items-center px-6" },
           [
             _c("input", {
               directives: [
@@ -7444,37 +7555,144 @@ var render = function() {
               }
             }),
             _vm._v(" "),
-            _vm.selected.length > 0
-              ? _c(
-                  "svg",
-                  {
-                    staticClass:
-                      "fill-current text-grey ml-3 cursor-pointer hover:text-indigo-dark",
-                    attrs: {
-                      width: "20",
-                      height: "20",
-                      viewBox: "0 0 20 20",
-                      role: "presentation",
-                      "aria-labelledby": "delete",
-                      xmlns: "http://www.w3.org/2000/svg"
+            _c("div", { staticClass: "flex items-center justify-end w-1/3" }, [
+              _vm.resource.actions.length > 0 && _vm.selected.length > 0
+                ? _c(
+                    "select",
+                    {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.selectedAction,
+                          expression: "selectedAction"
+                        }
+                      ],
+                      class: _vm.FORM_CONTROL + " w-2/4",
+                      on: {
+                        change: function($event) {
+                          var $$selectedVal = Array.prototype.filter
+                            .call($event.target.options, function(o) {
+                              return o.selected
+                            })
+                            .map(function(o) {
+                              var val = "_value" in o ? o._value : o.value
+                              return val
+                            })
+                          _vm.selectedAction = $event.target.multiple
+                            ? $$selectedVal
+                            : $$selectedVal[0]
+                        }
+                      }
                     },
-                    on: {
-                      click: function($event) {
-                        return _vm.deleteConfirm(_vm.selected)
-                      }
-                    }
-                  },
-                  [
-                    _c("path", {
+                    [
+                      _c(
+                        "option",
+                        { attrs: { value: "", selected: "", disabled: "" } },
+                        [_vm._v("Select an action")]
+                      ),
+                      _vm._v(" "),
+                      _vm._l(_vm.resource.actions, function(action) {
+                        return _c(
+                          "option",
+                          { key: action.id, domProps: { value: action.id } },
+                          [
+                            _vm._v(
+                              "\n                        " +
+                                _vm._s(action.name) +
+                                "\n                    "
+                            )
+                          ]
+                        )
+                      })
+                    ],
+                    2
+                  )
+                : _vm._e(),
+              _vm._v(" "),
+              _vm.resource.actions.length > 0 && _vm.selected.length > 0
+                ? _c(
+                    "button",
+                    {
+                      class: _vm.classnames(
+                        "ml-3 focus:outline-none cursor-pointer trans-30 h-10 flex items-center justify-center rounded-lg px-3",
+                        {
+                          "bg-indigo hover:bg-indigo-dark": _vm.selectedAction,
+                          "bg-indigo-lighter cursor-not-allowed": !_vm.selectedAction
+                        }
+                      ),
+                      attrs: { type: "button" },
+                      on: { click: _vm.runActionConfirm }
+                    },
+                    [
+                      _c(
+                        "svg",
+                        {
+                          staticClass: "fill-current text-white font-bold h-10",
+                          staticStyle: {
+                            "enable-background": "new 0 0 41.999 41.999"
+                          },
+                          attrs: {
+                            width: "20",
+                            height: "20",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            "xmlns:xlink": "http://www.w3.org/1999/xlink",
+                            version: "1.1",
+                            id: "Capa_1",
+                            x: "0px",
+                            y: "0px",
+                            viewBox: "0 0 41.999 41.999",
+                            "xml:space": "preserve"
+                          }
+                        },
+                        [
+                          _c("g", [
+                            _c("path", {
+                              staticClass: "active-path",
+                              attrs: {
+                                d:
+                                  "M36.068,20.176l-29-20C6.761-0.035,6.363-0.057,6.035,0.114C5.706,0.287,5.5,0.627,5.5,0.999v40  c0,0.372,0.206,0.713,0.535,0.886c0.146,0.076,0.306,0.114,0.465,0.114c0.199,0,0.397-0.06,0.568-0.177l29-20  c0.271-0.187,0.432-0.494,0.432-0.823S36.338,20.363,36.068,20.176z M7.5,39.095V2.904l26.239,18.096L7.5,39.095z"
+                              }
+                            })
+                          ])
+                        ]
+                      )
+                    ]
+                  )
+                : _vm._e(),
+              _vm._v(" "),
+              _vm.selected.length > 0
+                ? _c(
+                    "svg",
+                    {
+                      staticClass:
+                        "fill-current text-grey ml-8 cursor-pointer hover:text-indigo-dark",
                       attrs: {
-                        "fill-rule": "nonzero",
-                        d:
-                          "M6 4V2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2h5a1 1 0 0 1 0 2h-1v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6H1a1 1 0 1 1 0-2h5zM4 6v12h12V6H4zm8-2V2H8v2h4zM8 8a1 1 0 0 1 1 1v6a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1zm4 0a1 1 0 0 1 1 1v6a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1z"
+                        width: "20",
+                        height: "20",
+                        viewBox: "0 0 20 20",
+                        role: "presentation",
+                        "aria-labelledby": "delete",
+                        xmlns: "http://www.w3.org/2000/svg"
+                      },
+                      on: {
+                        click: function($event) {
+                          return _vm.deleteConfirm(_vm.selected)
+                        }
                       }
-                    })
-                  ]
-                )
-              : _vm._e()
+                    },
+                    [
+                      _c("path", {
+                        attrs: {
+                          "fill-rule": "nonzero",
+                          d:
+                            "M6 4V2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2h5a1 1 0 0 1 0 2h-1v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6H1a1 1 0 1 1 0-2h5zM4 6v12h12V6H4zm8-2V2H8v2h4zM8 8a1 1 0 0 1 1 1v6a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1zm4 0a1 1 0 0 1 1 1v6a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1z"
+                        }
+                      })
+                    ]
+                  )
+                : _vm._e()
+            ])
           ]
         ),
         _vm._v(" "),
@@ -7819,15 +8037,29 @@ var render = function() {
                     _c(
                       "button",
                       {
-                        staticClass:
-                          "trans-30 text-white bg-red-light focus:outline-none px-8 h-9 rounded-lg hover:bg-red-dark",
+                        class:
+                          "" +
+                          (_vm.action === "DeleteResources" ||
+                          (_vm.action === "RunAction" && _vm.data.isDestructive)
+                            ? _vm.DANGER_BUTTON
+                            : _vm.PRIMARY_BUTTON),
                         on: {
                           click: function($event) {
-                            return _vm.handleDelete()
+                            return _vm.handleConfirm()
                           }
                         }
                       },
-                      [_vm._v("\n                    Delete\n                ")]
+                      [
+                        _vm._v(
+                          "\n                    " +
+                            _vm._s(
+                              _vm.action === "DeleteResources"
+                                ? "Delete"
+                                : "Run Action"
+                            ) +
+                            "\n                "
+                        )
+                      ]
                     )
                   ]
                 )
@@ -23683,7 +23915,8 @@ __webpack_require__.r(__webpack_exports__);
   data: function data() {
     return {
       PRIMARY_BUTTON: 'trans-30 text-white bg-indigo-light focus:outline-none px-8 h-9 rounded-lg hover:bg-indigo-dark',
-      FORM_CONTROL: 'bg-white focus:outline-none text-grey-darkest my-3 border border-grey h-10 px-3 rounded-lg shadow focus:outline-none focus:border-indigo focus:border-2'
+      FORM_CONTROL: 'bg-white focus:outline-none text-grey-darkest my-3 border border-grey h-10 px-3 rounded-lg shadow focus:outline-none focus:border-indigo focus:border-2',
+      DANGER_BUTTON: 'trans-30 text-white bg-red-light focus:outline-none px-8 h-9 rounded-lg hover:bg-red-dark'
     };
   },
   methods: {
@@ -24359,7 +24592,7 @@ var POST_LOGIN = 'POST_LOGIN';
 /*!***********************************************!*\
   !*** ./src/client/store/modules/resources.js ***!
   \***********************************************/
-/*! exports provided: GET_RESOURCE, GET_RESOURCES, FETCH_RESOURCE, DELETE_RESOURCES, default */
+/*! exports provided: GET_RESOURCE, GET_RESOURCES, FETCH_RESOURCE, POST_RUN_ACTION, DELETE_RESOURCES, default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -24367,6 +24600,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GET_RESOURCE", function() { return GET_RESOURCE; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GET_RESOURCES", function() { return GET_RESOURCES; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FETCH_RESOURCE", function() { return FETCH_RESOURCE; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "POST_RUN_ACTION", function() { return POST_RUN_ACTION; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DELETE_RESOURCES", function() { return DELETE_RESOURCES; });
 /* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/defineProperty */ "./node_modules/@babel/runtime/helpers/defineProperty.js");
 /* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__);
@@ -24379,6 +24613,7 @@ var _actions;
 var GET_RESOURCE = 'GET_RESOURCE';
 var GET_RESOURCES = 'GET_RESOURCES';
 var FETCH_RESOURCE = 'FETCH_RESOURCE';
+var POST_RUN_ACTION = 'POST_RUN_ACTION';
 var DELETE_RESOURCES = 'DELETE_RESOURCES';
 /* harmony default export */ __webpack_exports__["default"] = ({
   state: {
@@ -24407,6 +24642,14 @@ var DELETE_RESOURCES = 'DELETE_RESOURCES';
     var slug = _ref5.slug,
         primaryKey = _ref5.primaryKey;
     return _utils_axios__WEBPACK_IMPORTED_MODULE_1__["default"].get("resources/".concat(slug, "/").concat(primaryKey));
+  }), _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0___default()(_actions, POST_RUN_ACTION, function (ctx, _ref6) {
+    var slug = _ref6.slug,
+        resources = _ref6.resources,
+        action = _ref6.action;
+    return _utils_axios__WEBPACK_IMPORTED_MODULE_1__["default"].post("resources/".concat(slug, "/run-action"), {
+      resources: resources,
+      action: action
+    });
   }), _actions),
   mutations: _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0___default()({}, GET_RESOURCES, function (state, data) {
     state.resources = data;

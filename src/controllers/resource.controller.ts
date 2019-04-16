@@ -108,6 +108,51 @@ class ResourceController {
 
     /**
      *
+     * Run a resource action on a selected list of resources.
+     *
+     * @param {Express.Request} req
+     *
+     * @param {Express.Response} res
+     *
+     * @return {Express.Response}
+     *
+     */
+    public async action(req: Express.Request, res: Express.Response) {
+        /**
+         * 
+         * Get the action to be run and selected resources
+         * 
+         */
+        const { action: actionId, resources } = req.body
+
+        /**
+         * 
+         * Find the specific action object we are running
+         * 
+         */
+        const action = req.pangaso.resource.actions().find((a: any) => a.id === actionId)
+
+        /**
+         * 
+         * Fetch a collection of all selected resources
+         * 
+         */
+        const collection = await req.pangaso.database.fetchByIds(req.params.slug, resources)
+
+        /**
+         * 
+         * Run the handle method on the action, passing in
+         * the database connection, request object
+         * and collection of models
+         * 
+         */
+        await action.handle(req.pangaso.database.get().collection(req.params.slug), req, collection)
+
+        return res.json({})
+    }
+
+    /**
+     *
      * Delete a resource from specific resource collection
      *
      * @param {Express.Request} req

@@ -42,6 +42,17 @@ router.get(
 
 /**
  *
+ * Define the route for running a specific action on a list of selected resources
+ *
+ */
+router.post(
+    '/api/resources/:slug/run-action',
+    SetResourceMiddleware,
+    Resource.action
+)
+
+/**
+ *
  * Define the route for updating a single database record for a specific collection/resource
  *
  */

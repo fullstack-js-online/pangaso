@@ -67,7 +67,23 @@ var Pangaso = /** @class */ (function () {
             return;
         this.initialized = true;
         try {
+            /**
+             *
+             * Fetch all files (and unfortunately, folders) in resource path
+             *
+             */
             var files = Fs.readdirSync(this.resourcesPath);
+            /**
+             *
+             * Get only files ending in .js
+             *
+             */
+            files = files.filter(function (file) { return file.substring(file.length - 3) === '.js'; });
+            /**
+             *
+             * Foreach of those files, require and load the resource
+             *
+             */
             files.forEach(function (file) {
                 var resource = require(_this.resourcesPath + "/" + file);
                 if (resource.default) {

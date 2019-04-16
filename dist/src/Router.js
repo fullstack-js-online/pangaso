@@ -34,6 +34,12 @@ router.get('/api/resources/:slug', set_resource_1.SetResourceMiddleware, resourc
 router.get('/api/resources/:slug/:resource', set_resource_1.SetResourceMiddleware, resource_controller_1.Resource.show);
 /**
  *
+ * Define the route for running a specific action on a list of selected resources
+ *
+ */
+router.post('/api/resources/:slug/run-action', set_resource_1.SetResourceMiddleware, resource_controller_1.Resource.action);
+/**
+ *
  * Define the route for updating a single database record for a specific collection/resource
  *
  */

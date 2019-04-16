@@ -62,6 +62,18 @@ declare class ResourceController {
     update(req: Express.Request, res: Express.Response): Promise<import("express-serve-static-core").Response>;
     /**
      *
+     * Run a resource action on a selected list of resources.
+     *
+     * @param {Express.Request} req
+     *
+     * @param {Express.Response} res
+     *
+     * @return {Express.Response}
+     *
+     */
+    action(req: Express.Request, res: Express.Response): Promise<import("express-serve-static-core").Response>;
+    /**
+     *
      * Delete a resource from specific resource collection
      *
      * @param {Express.Request} req

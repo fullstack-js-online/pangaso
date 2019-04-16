@@ -83,6 +83,20 @@ export class Database {
     }
 
     /**
+     * Fetch all matching records by a bunch of ids
+     *
+     * @param {string} collection
+     *
+     */
+    public async fetchByIds(collection: string, resources: Array<string>) {
+        // @ts-ignore
+        return this.get()
+            .collection(collection)
+            .find({ _id: { $in: resources.map(resource => new ObjectID(resource)) } })
+            .toArray()
+    }
+
+    /**
      *
      * Delete a specific resource
      *
@@ -93,11 +107,16 @@ export class Database {
      * @return {Promise}
      *
      */
-    public async destroy(collection: string, primaryKeys: Array<string>): Promise<any> {
+    public async destroy(
+        collection: string,
+        primaryKeys: Array<string>
+    ): Promise<any> {
         // @ts-ignore
         return this.get()
             .collection(collection)
-            .deleteMany({ _id: { $in: primaryKeys.map(key => new ObjectID(key)) } })
+            .deleteMany({
+                _id: { $in: primaryKeys.map(key => new ObjectID(key)) }
+            })
     }
 
     /**

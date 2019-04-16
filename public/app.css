@@ -24735,6 +24735,34 @@ table {
   color: #b8c2cc !important;
 }
 
+/* This is to remove the arrow of select element in IE */
+
+select::-ms-expand {
+  display: none;
+}
+
+select {
+  -webkit-appearance: none;
+          -moz-appearance: none;
+       appearance: none;
+}
+
+@-moz-document url-prefix() {
+  select {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+  }
+
+  select {
+    width: 110%;
+    background-position: right 30px center !important;
+    border: none !important;
+  }
+}
+
 @media (min-width: 576px) {
   .sm\:list-reset {
     list-style: none;
